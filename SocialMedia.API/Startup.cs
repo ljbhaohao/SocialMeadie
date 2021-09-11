@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,9 +40,21 @@ namespace SocialMedia.API
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
                 });
+            services.AddIdentity<IdentityUser, IdentityRole>()
+             .AddEntityFrameworkStores<MyContext>()
+             .AddDefaultTokenProviders();
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 6;
+            });
             services.AddScoped<IPostService, PostService>();
             services.AddDbContext<MyContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("SocialMediaApiDbTwo")));
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient<IAccountRepository, AccountRepository>();
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
             services.Configure<PagenationOptions>(Configuration.GetSection("Pagination"));
             services.AddSwaggerGen(c =>
@@ -48,8 +62,8 @@ namespace SocialMedia.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "SocialMedia.API", Version = "v1" });
             });
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-        }
 
+        }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -59,9 +73,18 @@ namespace SocialMedia.API
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SocialMedia.API v1"));
             }
+            else
+            {
+                app.UseExceptionHandler(appBulider => {
+                    appBulider.Run(async context => {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("·¢ËÍÎ´Öª´íÎó");
+                    });
+                });
+            }
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SocialMedia.Core.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SocialMedia.Infrastructure.Data
 {
-    public class MyContext : DbContext
+    public class MyContext : IdentityDbContext
     {
         public MyContext(DbContextOptions<MyContext> options)
                 : base(options)
